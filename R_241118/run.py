@@ -1,12 +1,11 @@
-import py5
-from utils.image_utils import save_frames
-
-from hex.hex_grid import HexGrid
-from utils.image_utils import create_gif
-from utils.p5_utils import draw_map, draw_vertex
-from hex.hex_wave_collapse import HexWaveFunctionCollapseGrid
-import random
 import sys
+import random
+import py5
+
+from utils.image_utils import save_frames, create_gif
+from utils.p5_utils import draw_map, draw_vertex
+from hex.hex_grid import HexGrid
+from hex.hex_wave_collapse import HexWaveFunctionCollapseGrid
 
 hex_grid = None
 if len(sys.argv) > 1:
