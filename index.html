@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rascunhos e Experimentos Artísticos</title>
+    <style>
+        @charset "UTF-8";
+        @media all {
+
+            body {
+                background-color: GhostWhite;
+                text-align: center;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            p,
+            blockquote,
+            ul,
+            ol,
+            li,
+            td,
+            th,
+            table,
+            small,
+            span {
+                font-family: "Droid Sans Mono";
+                word-wrap: break-word;
+                /* IE 5+ */
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2em;
+                line-height: 1.625em;
+                font-style: normal;
+                font-weight: bold;
+                margin: 0em 0 0em 0;
+                padding: 0 0 0 0;
+            }
+
+            h2 {
+                font-size: 1em;
+                line-height: 1.625em;
+                font-style: normal;
+                font-weight: bold;
+                margin: 1em 0 1em 0;
+                padding: 0 0 0 0;
+            }
+
+            h4 {
+                font-size: 1em;
+                line-height: 1.625em;
+                font-style: normal;
+                font-weight: bold;
+                margin: 3em 0 0 0;
+                padding: 0 0 0 0;
+            }
+
+            p {
+                font-size: 1em;
+                line-height: 1.625em;
+                margin: 0 0 0.5em 0;
+                padding: 0 0 0 0;
+            }
+
+            blockquote {
+                font-size: 1em;
+                line-height: 1.625em;
+                margin: 0 0 1em 3em;
+                padding: 1em;
+            }
+
+            ol,
+            ul {
+                font-size: 1em;
+                line-height: 1.625em;
+                margin: 0 0 1em 3em;
+                padding: 0 0 0 0;
+            }
+
+            ul ul {
+                margin: 0 0 0 3em;
+            }
+
+            li {
+                margin: 0 0 0 0;
+                padding: 0 0 0 0;
+            }
+
+            li.spaced {
+                margin: 0 0 1em 0;
+                padding: 0 0 0 0;
+            }
+
+            br {
+                line-height: 0em;
+                margin: 0 0 0 0;
+                padding: 0 0 0 0;
+            }
+
+            hr {
+                height: 1px;
+                border: 0;
+                margin: 3em 0 3em 0;
+                padding: 0 0 0 0;
+            }
+
+            .disclaimer {
+                font-size: 0.875em;
+                line-height: 1.625em;
+                margin: 0 0 1em 0;
+                padding: 0 0 0 0;
+            }
+
+            .cc {
+                font-size: 0.875em;
+                line-height: 1.625em;
+                margin: 0 0 1em 0;
+                padding: 0 0 0 0;
+            }
+
+            .image {
+                text-align: center;
+                margin: 0 0 0 0;
+                padding: 0 0 0 0;
+            }
+
+            .caption {
+                font-size: 0.875em;
+                text-align: center;
+                line-height: 1.625em;
+                margin: 1em 0 1em 0;
+                padding: 0 0 0 0;
+            }
+
+            .code {
+                font-family: "Lucida Console", "Courier", "Courier New", monospace;
+            }
+
+            .code_italic {
+                font-family: "Lucida Console", "Courier", "Courier New", monospace;
+                font-style: italic;
+            }
+
+            sup {
+                font-weight: normal;
+                font-size: 0.75em;
+                line-height: 0%;
+                vertical-align: 0.25em;
+            }
+
+            em strong {
+                font-weight: bold;
+                font-style: italic;
+            }
+
+            table {
+                border-collapse: collapse;
+                margin: 1.625em 0 2em 0;
+            }
+
+            tr {
+                vertical-align: top;
+            }
+
+            td {
+                font-size: 0.875em;
+                line-height: 1.5em;
+                font-weight: normal;
+                text-align: left;
+                padding: 0.25em 0.75em 0.25em 0.75em;
+            }
+
+            th {
+                font-size: 0.875em;
+                line-height: 1.5em;
+                font-weight: bold;
+                text-align: left;
+                padding: 0.25em 0.75em 0.25em 0.75em;
+            }
+
+            img {
+                max-width: 100%;
+            }
+
+            div.figure {
+                margin: 3em 10% 3em 10%;
+                padding: 0 0 0 0;
+            }
+
+            .bold_write {
+                font-weight: bold;
+            }
+        }
+
+        @media screen,
+        projection,
+        handheld {
+
+            body {
+                margin: 4em 12% 4em 12%;
+                padding: 0 0 0 0;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            p,
+            blockquote,
+            ul,
+            ol,
+            li,
+            td,
+            th,
+            table,
+            small,
+            span {
+                color: RebeccaPurple;
+            }
+
+            hr {
+                background-color: RebeccaPurple;
+            }
+
+            table,
+            td,
+            th {
+                border: 1px solid RebeccaPurple;
+            }
+
+            a:link {
+                color: RebeccaPurple;
+                border-bottom: 1px dotted RebeccaPurple;
+                text-decoration: none;
+            }
+
+            a:visited {
+                color: RebeccaPurple;
+                border-bottom: 1px dotted RebeccaPurple;
+                text-decoration: none;
+            }
+
+            a:hover {
+                color: white;
+                background-color: RebeccaPurple;
+                text-decoration: none;
+            }
+
+            a:active {
+                color: white;
+                background-color: RebeccaPurple;
+                text-decoration: none;
+            }
+
+        }
+
+        @media print {
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            p,
+            blockquote,
+            ul,
+            ol,
+            li,
+            td,
+            th,
+            table,
+            a:link,
+            a:visited,
+            a:hover,
+            a:active,
+            span {
+                text-decoration: none;
+                color: black;
+                background-color: white;
+            }
+
+            hr {
+                background-color: black;
+            }
+
+            table,
+            td,
+            th {
+                border: 1px solid black;
+            }
+        }
+
+        img:not([src]) {
+            visibility: hidden;
+        }
+
+        /* Fixes Firefox anomaly during image load */
+        @-moz-document url-prefix() {
+            img:-moz-loading {
+                visibility: hidden;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1><strong>Rascunhos e Experimentos Artísticos</strong></h1>
+    <p>Esta é uma lista de rascunhos e experimentos artísticos pessoais.</p>
+    <p>O código-fonte dos esboços está neste <a href="https://github.com/MrMenezesDev" target="_blank">repositório
+            git</a>.</p>
+
+    <center>
+        <span><a href="https://github.com/MrMenezesDev" target="_blank">Github</a> | <a
+                href="https://instagram.com/__mrmenezes" target="_blank">Instagram</a> | <a href="https://mrmenezes.dev"
+                target="_blank">Website</a></span>
+    </center>
+
+    <hr />
+    <a id="R_241118" href="#R_241118">
+        <h2>#R_241118</h2>
+    </a>
+    <p>Código <a class="bold_write" href="https://github.com/MrMenezesDev/Rascunhos/tree/master/R_241118/"
+            target="_blank">aqui</a></p>
+    <p>Colapso de função de onda em um tabuleiro hexagonal</p>
+  
+    <p><img src="R_241118/animation_999666333000.gif" alt="Animation"></p>
+    <p> Inspirado num experimento do <a href="https://github.com/berinhard">Berin</a>
+        <p> <a href="https://berinhard.github.io/sketches/#s_296" target="_blank"> First experiment on Wave Function
+                Collapse - 10/09/2024 </a> </p>
+        </p>
+</body>
+
+</html>
