@@ -1,6 +1,6 @@
 # Rascunhos
 
-[![Project Version](https://img.shields.io/badge/version-0.1.0-blue)](http://mrmenezesdev.github.io/rascunhos/)
+[![Project Version](https://img.shields.io/badge/version-0.1.1-blue)](http://mrmenezesdev.github.io/rascunhos/)
 
 ## Descrição
 
