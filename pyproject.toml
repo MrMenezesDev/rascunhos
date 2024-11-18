@@ -1,0 +1,11 @@
+[project]
+name = "rascunhos"
+version = "0.1.0"
+description = "Meus rascunhos criados com py5."
+authors = ["Erick Menezes <erick@mrmenezes.dev>"]
+url = "http://mrmenezesdev.github.io/rascunhos/"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "py5>=0.10.3a1",
+]
