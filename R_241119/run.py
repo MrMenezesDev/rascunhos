@@ -5,6 +5,7 @@ import py5
 from utils.image_utils import save_frames, create_gif
 from utils.p5_utils import draw_map, draw_vertex
 from hex.hex_grid import HexGrid
+import numpy as np
 
 hex_grid = None
 if len(sys.argv) > 1:
@@ -26,9 +27,11 @@ def settings():
     py5.size(800, 800)
 
 def setup():
+    global seed
     """
     Configura o ambiente inicial do sketch.
     """
+    np.random.seed(seed)
     global hex_grid, eca
     start_time = time.time()
     py5.background(255)
@@ -63,7 +66,7 @@ def draw():
 def key_pressed():
     global seed, frames_dir
     if py5.key == 's' or py5.key == 'S':
-        create_gif(frames_dir, seed)
+        create_gif(frames_dir, seed, infinite_loop=False)
 
 
 frames_dir = save_frames(seed, limit=None, start=0)

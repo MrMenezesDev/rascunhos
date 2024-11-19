@@ -193,7 +193,7 @@ def mouse_dragged():
 def key_pressed():
     global seed, frames_dir
     if py5.key == 'z' or py5.key == 'Z':
-        create_gif(frames_dir, seed)
+        create_gif(frames_dir, seed, infinite_loop=False)
 
 angle = 0
 base = 10
