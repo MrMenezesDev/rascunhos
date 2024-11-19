@@ -58,7 +58,19 @@ def create_lines(p1, p2, ini):
         mat3d.append([xs1[i], ys1[i], zs1[i]])
     return mat3d
 
-def generate_matrix(base, size):
+def generate_random3_d_grid(base: int, size: int) -> list:
+    """
+    Gera uma grade 3D aleatória com base e tamanho especificados.
+    Esta função cria três arrays de inteiros aleatórios (xs, ys, zs) dentro do intervalo [0, base].
+    Em seguida, modifica o último elemento de um desses arrays com base em uma escolha aleatória.
+    O primeiro elemento do array xs é definido como 0.
+    A função então gera uma matriz 3D criando linhas entre pontos consecutivos nos arrays.
+    Args:
+        base (int): O limite superior para os inteiros aleatórios.
+        size (int): O número de pontos em cada dimensão.
+    Returns:
+        list: Uma lista de coordenadas 3D representando a grade gerada.
+    """
     xs = np.random.random_integers(0, base, size)
     ys = np.random.random_integers(0, base, size)
     zs = np.random.random_integers(0, base, size)
@@ -75,7 +87,7 @@ def generate_matrix(base, size):
     xs[0] = 0
 
     xs1, ys1, zs1 = [[], [], []]
-    mat3d =[]
+    mat3d = []
     for i in range(0, xs.size-1):
         insert = create_lines([xs[i], ys[i], zs[i]], [xs[i+1], ys[i+1], zs[i+1]], [xs[i], ys[i], zs[i]])
         for coord in insert:
@@ -88,7 +100,7 @@ def generate_matrix(base, size):
     
     return mat3d
 
-def generate_cube(base):
+def generate_cube_geometry(base):
     cantos_base = []
     cantos_topo = []
     arestas = []

@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 from utils.image_utils import save_frames, create_gif
-from maze.maze import generate_matrix, generate_cube
+from maze.maze import generate_random3_d_grid, generate_cube_geometry
 
 # Adicionar a lógica para definir a seed
 if len(sys.argv) > 1:
@@ -168,8 +168,8 @@ size = 10
 rotate_x_angle = 0
 rotate_y_angle = 0
 rotate_speed = 90
-cubo = generate_cube(base, size)
-matriz = generate_matrix(base, size)
+cubo = generate_cube_geometry(base, size)
+matriz = generate_random3_d_grid(base, size)
 face = None
 
 frames_dir = save_frames(seed, limit=333, start=0)

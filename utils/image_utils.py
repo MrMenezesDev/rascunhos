@@ -9,7 +9,7 @@ def save_frames(seed, limit=50, start=0):
     return frames_dir
 
 
-def create_gif(frames_dir, seed, infinite_loop=True):
+def create_gif(frames_dir, seed, infinite_loop=True, duration=0.1):
     # Lista todos os arquivos na pasta e filtra apenas os arquivos PNG
     frame_files = sorted([f for f in os.listdir(frames_dir) if f.endswith(".png")])
     print(f"Creating GIF with {len(frame_files)} frames.")
@@ -29,7 +29,7 @@ def create_gif(frames_dir, seed, infinite_loop=True):
     if images:
         # Cria o GIF com o nome da pasta incluído
         gif_filename = f"./tmp/animation_{seed}.gif"
-        imageio.mimsave(gif_filename, images, duration=0.1, loop=0)
+        imageio.mimsave(gif_filename, images, duration=duration, loop=0)
     else:
         print("No images found to create GIF.")
     print(f"Animation saved as {gif_filename}")
