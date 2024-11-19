@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import List, Callable, Tuple
 from utils.math_utils import get_rotation_in_line, line_intersection
 
+
 @dataclass
 class HexGrid:
     cols: int
@@ -16,40 +17,84 @@ class HexGrid:
     hex_width: float = field(init=False)
     offset: float = field(init=False)
     state: List[List[int]] = field(default_factory=list)
+    state_colors: List[List[str]] = field(default_factory=list)
 
     def __post_init__(self):
-        self.hex_height = math.sin(math.pi * 2 / 6) * self.size * 2  # Altura do hexágono
+        self.hex_height = (
+            math.sin(math.pi * 2 / 6) * self.size * 2
+        )  # Altura do hexágono
         self.hex_width = self.size * 1.5  # Largura do hexágono
         self.offset = self.size
-    
+
         self.state = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
-    
+        self.state_colors = [["" for _ in range(self.cols)] for _ in range(self.rows)]
+
     def set_state(self, evolution_history, step):
-        """
-        Define o estado das células com base no evolution_history e no passo atual.
-        """
         self.state = evolution_history[step]
 
-
-    def calculate_center(self, col: int, row: int) -> Tuple[float, float]:
+    def calculate_center(self, row: int, col: int) -> Tuple[float, float]:
         """
-        Calcula o centro do hexágono baseado na coluna e linha.
+        Calcula o centro do hexágono baseado na linha e coluna.
         """
         offset_y = self.hex_height / 2 if col % 2 == 1 else 0
         center_x = col * self.hex_width + self.offset
         center_y = row * self.hex_height + offset_y + self.offset
         return center_x, center_y
 
+    def get_tile_color(self, x: int, y: int) -> str:
+        row, col = self.get_cell_at(x, y)
+        if 0 <= row < self.rows and 0 <= col < self.cols:
+            return self.state_colors[row][col]
+        return None
+    
+    def change_tile_color(self, x: int, y: int, new_color: str):
+        row, col = self.get_cell_at(x, y)   
+        if 0 <= row < self.rows and 0 <= col < self.cols:
+            self.state[row][
+                col
+            ] = 1  # Adicione esta linha para garantir que o estado seja 1
+            self.state_colors[row][col] = new_color
+            print(
+                f"Drawing hexagon at ({x}, {y}) in row {row} and col {col} with color  {new_color}"
+            )  # Adicione esta linha
+            center_x, center_y = self.calculate_center(x, y)
+            self.draw_hexagon(center_x, center_y, self.size, color=new_color)
+       
+
+    def get_cell_at(self, x: float, y: float) -> Tuple[int, int]:
+        """
+        Recebe uma coordenada (x, y) e retorna a célula (row, col) que está sobre essa coordenada.
+        """
+        col = int(x // self.hex_width)
+        row = int((y - (col % 2) * self.hex_height / 2) // self.hex_height)
+
+        # Verifica se a coordenada está dentro dos limites da grade
+        if 0 <= col < self.cols and 0 <= row < self.rows:
+            return row, col
+        else:
+            return -1, -1
+
     def draw(self):
         for y in range(self.rows):
             for x in range(self.cols):
                 center_x, center_y = self.calculate_center(x, y)
                 if self.state[y][x] == 1:
-                    self.draw_hexagon(center_x, center_y, self.size, color=1)
+                    color = (
+                        self.state_colors[y][x]
+                        if self.state_colors[y][x]
+                        else self.colors[0]
+                    )
+                    self.draw_hexagon(center_x, center_y, self.size, color=color)
                 else:
                     self.draw_hexagon(center_x, center_y, self.size)
                     # Desenhar um hexágono menor no centro
-                    self.draw_hexagon(center_x, center_y, self.size * 0.29, math.pi * 2 / 12, self.colors)
+                    self.draw_hexagon(
+                        center_x,
+                        center_y,
+                        self.size * 0.29,
+                        math.pi * 2 / 12,
+                        self.colors,
+                    )
 
     def draw_cell(self, cell):
         """
@@ -68,7 +113,7 @@ class HexGrid:
             edge = cell.tile.edges[i]
             index = [4, -1, 0, 1, 2, 3][i]
             if edge == 1:
-                
+
                 # Calcular os ângulos dos dois vértices que formam a borda
                 angle1 = math.pi * 2 / 6 * index
                 angle2 = math.pi * 2 / 6 * ((index + 1) % 6)
@@ -144,14 +189,16 @@ class HexGrid:
         # Desenhar os losângulos
         if colors and len(colors) >= 3:
             for i in [-2, 0, 2]:
-                self.draw_vertex([
-                    (x, y),
-                    (vertices[i - 1][0], vertices[i - 1][1]),
-                    (vertices[i][0], vertices[i][1]),
-                    (vertices[i + 1][0], vertices[i + 1][1]),
-                ], colors[i])
+                self.draw_vertex(
+                    [
+                        (x, y),
+                        (vertices[i - 1][0], vertices[i - 1][1]),
+                        (vertices[i][0], vertices[i][1]),
+                        (vertices[i + 1][0], vertices[i + 1][1]),
+                    ],
+                    colors[i],
+                )
         else:
             self.draw_map(vertices, color)
 
         return vertices
-
