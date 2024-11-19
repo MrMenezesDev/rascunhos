@@ -88,3 +88,35 @@ def generate_matrix(base, size):
     
     return mat3d
 
+def generate_cube(base):
+    cantos_base = []
+    cantos_topo = []
+    arestas = []
+
+    # Gerar os 8 vértices do cubo
+
+    # Vértices da base
+    cantos_base.append([0, 0, 0])
+    cantos_base.append([base, 0, 0])
+    cantos_base.append([base, base, 0])
+    cantos_base.append([0, base, 0])
+
+    # Vértices do topo
+    cantos_topo.append([0, 0, base])
+    cantos_topo.append([base, 0, base])
+    cantos_topo.append([base, base, base])
+    cantos_topo.append([0, base, base])
+
+    # Arestas da base
+    for i in range(4):
+        arestas.append([cantos_base[i], cantos_base[(i + 1) % 4]])
+
+    # Arestas do topo
+    for i in range(4):
+        arestas.append([cantos_topo[i], cantos_topo[(i + 1) % 4]])
+
+    # Arestas verticais
+    for i in range(4):
+        arestas.append([cantos_base[i], cantos_topo[i]])
+
+    return cantos_base, cantos_topo, arestas

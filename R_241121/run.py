@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 from utils.image_utils import save_frames, create_gif
-from maze.maze import generate_matrix, generate_cube
+from maze.maze import generate_cube, generate_matrix
 
 # Adicionar a lógica para definir a seed
 if len(sys.argv) > 1:
@@ -12,6 +12,22 @@ else:
     seed = 42  # Valor padrão para a seed
 
 np.random.seed(seed)
+
+
+speed = 0.2  # Velocidade da esfera
+next_point = 1
+angle = 0
+base = 10
+size = 7
+rotate_x_angle = 0
+rotate_y_angle = 0
+rotate_speed = 90
+cubo = generate_cube(base)
+matriz = generate_matrix(base, size)
+face = None
+# Variáveis globais para a esfera
+sphere_pos = matriz[0].copy() * 20
+sphere_visible = True
 
 
 def settings():
@@ -27,15 +43,15 @@ def setup():
     """
     py5.background(255)
     py5.no_loop()
+    py5.frame_rate(30)
 
 
 def draw():
-    global cubo, matriz, base, face
+    global cubo, matriz, base, face, sphere_pos, sphere_visible
+    global rotate_x_angle, rotate_y_angle, angle, next_point
     """
     Função de desenho chamada repetidamente pelo py5.
     """
-    global rotate_x_angle, rotate_y_angle, angle
-    print(rotate_speed, rotate_x_angle, rotate_y_angle)
     # # Simular interpolação de um ponto para outro da tela com o mouse
 
     py5.background(255)
@@ -122,6 +138,33 @@ def draw():
         py5.sphere(center_x)
         py5.pop_matrix()
 
+    
+  
+    
+    # Desenhar a esfera se estiver visível
+    if sphere_visible:
+        matrix_x =matriz[int(next_point)][0] 
+        matrix_y =matriz[int(next_point)][1] 
+        matrix_z =matriz[int(next_point)][2] 
+
+        # Atualizar a posição da esfera
+        sphere_pos[0] += (matrix_x  - sphere_pos[0]) * speed
+        sphere_pos[1] += (matrix_y - sphere_pos[1]) * speed
+        sphere_pos[2] += (matrix_z - sphere_pos[2]) * speed
+        py5.push_matrix()
+        py5.translate(sphere_pos[0] * vinte, sphere_pos[1] * vinte, sphere_pos[2] * vinte)
+        py5.fill(128, 0, 128)  # Cor roxa
+        py5.sphere(base)
+        py5.pop_matrix()
+        
+        next_point+= speed
+
+        if next_point >= len(matriz) - 1:
+            sphere_visible = False
+            py5.no_loop()
+
+
+
 def draw_face(p1, p2, p3, p4):
     py5.begin_shape()
     py5.vertex(p1[0] * 20, p1[1] * 20, p1[2] * 20)
@@ -137,16 +180,12 @@ def key_pressed():
         create_gif(frames_dir, seed)
     elif py5.key == "w" or py5.key == 'W':
         rotate_x_angle -= rotate_speed
-        print(rotate_x_angle, rotate_y_angle)
     elif py5.key == "s" or py5.key == 'S':
         rotate_x_angle += rotate_speed
-        print(rotate_x_angle, rotate_y_angle)
     elif py5.key == "a" or py5.key == 'A':
         rotate_y_angle -= rotate_speed
-        print(rotate_x_angle, rotate_y_angle)
     elif py5.key == "d" or py5.key == 'D':
         rotate_y_angle += rotate_speed
-        print(rotate_x_angle, rotate_y_angle)
         
     py5.redraw()
     
@@ -160,22 +199,15 @@ def mouse_dragged():
 def key_pressed():
     global seed, frames_dir
     if py5.key == 'z' or py5.key == 'Z':
-        create_gif(frames_dir, seed, infinite_loop=False)
+        create_gif(frames_dir, seed, infinite_loop=True)
 
-angle = 0
-base = 10
-size = 10
-rotate_x_angle = 0
-rotate_y_angle = 0
-rotate_speed = 90
-cubo = generate_cube(base, size)
-matriz = generate_matrix(base, size)
-face = None
 
 frames_dir = save_frames(seed, limit=333, start=0)
 py5.run_sketch(block=False)
 
 while True:
+    if not sphere_visible:
+        break
     import time
     angle += 0.01
     rotate_x_angle += 5 * py5.sin(angle)
