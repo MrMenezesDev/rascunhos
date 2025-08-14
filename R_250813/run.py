@@ -26,8 +26,18 @@ import math
 import json
 from pathlib import Path
 import random
+import imageio.v2 as imageio  # para salvar recorte
+import numpy as np
 import py5  # type: ignore
-from hex.hex_grid import HexGrid  # Reaproveita métodos de desenho
+try:
+    from hex.hex_grid import HexGrid  # Reaproveita métodos de desenho
+except ModuleNotFoundError:
+    # Permite executar diretamente `uv run R_250813/run.py` adicionando o diretório raiz ao sys.path
+    import sys
+    ROOT = Path(__file__).resolve().parent.parent
+    if str(ROOT) not in sys.path:
+        sys.path.append(str(ROOT))
+    from hex.hex_grid import HexGrid
 from utils.p5_utils import draw_vertex, draw_map
 
 
@@ -42,6 +52,8 @@ UI_TITLE_SIZE = 20
 UI_ENTRY_SIZE = 14
 fit_to_area = True  # escala grade para preencher área disponível
 last_scale = 1.0  # escala calculada no frame
+rotation_angle = 0.0  # rotação em radianos
+ROTATION_STEP = math.radians(5)
 
 
 # ------------------ Estado ------------------ #
@@ -337,6 +349,9 @@ def draw_help_panel():
     ("U", "Ciclar cubo"),
     ("P", "Aleatória barras"),
     ("O", "Aleatória cubo"),
+    ("Q / E", "Rotacionar -/+"),
+    ("L", "Reset rotação"),
+        ("K", "Salvar PNG"),
         ("G", f"Debug {debug_line}"),
         ("V", "Mostrar/ocultar vazios"),
         ("I", f"Inner vazios {'OFF' if hide_inner_when_empty else 'ON'}"),
@@ -349,6 +364,7 @@ def draw_help_panel():
     btn_w, btn_h = 160, 26
     btn_x = py5.width - btn_w - 16
     btn_y = 12
+    # Botão toggle vazios
     py5.fill(70, 70, 70)
     py5.rect(btn_x, btn_y, btn_w, btn_h, 4)
     py5.fill(220)
@@ -356,11 +372,22 @@ def draw_help_panel():
     label = "Ocultar hex vazios" if show_empty_hex else "Mostrar hex vazios"
     py5.text_size(12)
     py5.text(label, btn_x + btn_w / 2, btn_y + btn_h / 2)
+    # Botão salvar imagem
+    save_w = 140
+    save_h = 26
+    save_x = btn_x - save_w - 12
+    save_y = btn_y
+    py5.fill(70, 70, 70)
+    py5.rect(save_x, save_y, save_w, save_h, 4)
+    py5.fill(220)
+    py5.text_size(12)
+    py5.text("Salvar PNG", save_x + save_w / 2, save_y + save_h / 2)
     py5.text_align(py5.LEFT, py5.TOP)
     py5.text_size(UI_ENTRY_SIZE)
     # Guardar área do botão em globals simples
-    global _btn_bounds
+    global _btn_bounds, _btn_save_bounds
     _btn_bounds = (btn_x, btn_y, btn_w, btn_h)
+    _btn_save_bounds = (save_x, save_y, save_w, save_h)
 
     # duas colunas
     py5.text_size(UI_ENTRY_SIZE)
@@ -460,7 +487,12 @@ def draw():
         offset_y = (avail_h - grid_h * scale_factor) / 2
         py5.translate(offset_x, offset_y)
         py5.scale(scale_factor)
-    # Borda da área desenhável
+    # Aplicar rotação (centro da grade)
+    py5.push_matrix()
+    py5.translate(grid_w / 2, grid_h / 2)
+    py5.rotate(rotation_angle)
+    py5.translate(-grid_w / 2, -grid_h / 2)
+    # Borda da área desenhável (gira junto)
     py5.no_fill()
     py5.stroke(0, 80)
     py5.stroke_weight(2)
@@ -501,7 +533,8 @@ def draw():
     for r in range(dyn_rows):
         for c in range(dyn_cols):
             draw_edges(r, c, phase='front')
-    py5.pop_matrix()
+    py5.pop_matrix()  # fim rotação
+    py5.pop_matrix()  # fim translate painel
 
 
 def mouse_moved():  # atualizar célula sob o mouse
@@ -522,6 +555,16 @@ def mouse_moved():  # atualizar célula sob o mouse
         my = (my - offset_y)
         mx /= last_scale
         my /= last_scale
+    # aplicar rotação inversa para mapear clique -> grade
+    if rotation_angle != 0.0:
+        pivot_x, pivot_y = grid_w / 2, grid_h / 2
+        dx = mx - pivot_x
+        dy = my - pivot_y
+        cos_a = math.cos(rotation_angle)
+        sin_a = math.sin(rotation_angle)
+        # inversa de rot(angle) = rot(-angle)
+        mx = dx * cos_a + dy * sin_a + pivot_x
+        my = -dx * sin_a + dy * cos_a + pivot_y
     r, c = get_cell_at(mx, my)
     hover_cell = (r, c) if r >= 0 else None
 
@@ -542,6 +585,14 @@ def mouse_pressed():
             my = (my - offset_y)
             mx /= last_scale
             my /= last_scale
+        if rotation_angle != 0.0:
+            pivot_x, pivot_y = grid_w / 2, grid_h / 2
+            dx = mx - pivot_x
+            dy = my - pivot_y
+            cos_a = math.cos(rotation_angle)
+            sin_a = math.sin(rotation_angle)
+            mx = dx * cos_a + dy * sin_a + pivot_x
+            my = -dx * sin_a + dy * cos_a + pivot_y
         r, c = get_cell_at(mx, my)
         if r < 0:
             return
@@ -568,6 +619,14 @@ def mouse_pressed():
             my = (my - offset_y)
             mx /= last_scale
             my /= last_scale
+        if rotation_angle != 0.0:
+            pivot_x, pivot_y = grid_w / 2, grid_h / 2
+            dx = mx - pivot_x
+            dy = my - pivot_y
+            cos_a = math.cos(rotation_angle)
+            sin_a = math.sin(rotation_angle)
+            mx = dx * cos_a + dy * sin_a + pivot_x
+            my = -dx * sin_a + dy * cos_a + pivot_y
         r, c = get_cell_at(mx, my)
         clear_cell(r, c)
     # clique em botão do painel
@@ -577,6 +636,10 @@ def mouse_pressed():
             if bx <= py5.mouse_x <= bx + bw and by <= py5.mouse_y <= by + bh:
                 global show_empty_hex
                 show_empty_hex = not show_empty_hex
+        if '_btn_save_bounds' in globals():
+            sx, sy, sw, sh = _btn_save_bounds
+            if sx <= py5.mouse_x <= sx + sw and sy <= py5.mouse_y <= sy + sh:
+                save_current_image()
 
 
 def key_pressed():
@@ -639,6 +702,40 @@ def key_pressed():
     elif py5.key in ('f', 'F'):
         global fit_to_area
         fit_to_area = not fit_to_area
+    elif py5.key in ('q','Q'):
+        global rotation_angle
+        rotation_angle -= ROTATION_STEP
+    elif py5.key in ('e','E'):
+        rotation_angle += ROTATION_STEP
+    elif py5.key in ('l','L'):
+        rotation_angle = 0.0
+    elif py5.key in ('k','K'):
+        save_current_image()
+
+
+def save_current_image():
+    # Captura pixels do frame atual, recorta área de desenho (exclui painel) e salva PNG
+    try:
+        arr = py5.get_np_pixels()  # ndarray HxWx4 (RGBA)
+        if arr is None:
+            print("Falha ao capturar pixels.")
+            return
+        if UI_PANEL_HEIGHT >= arr.shape[0]:
+            print("Altura do painel maior que frame, nada salvo.")
+            return
+        sub = arr[UI_PANEL_HEIGHT:, :, :].copy()  # inclui alpha
+        alpha = sub[..., 3:4].astype(np.float32)  # formato (H,W,1)
+        rgb = sub[..., :3].astype(np.float32)
+        # Corrige premultiplicação (assumindo rgb já multiplicado por alpha)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            rgb = np.where(alpha>0, np.clip(rgb * 255.0 / alpha, 0, 255), 255.0)
+        cropped = rgb.astype(np.uint8)
+        ts = py5.millis()
+        filename = f"export_{ts}.png"
+        imageio.imwrite(filename, cropped)
+        print(f"Imagem salva: {filename}")
+    except Exception as e:
+        print(f"Erro ao salvar imagem: {e}")
 
 
 py5.run_sketch(block=False)
