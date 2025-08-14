@@ -32,12 +32,12 @@ from utils.p5_utils import draw_vertex, draw_map
 
 
 # ------------------ Parâmetros da grade ------------------ #
-HEX_SIZE = 48  # raio (distância centro->vértice)
+HEX_SIZE = 64  # raio (distância centro->vértice)
 INITIAL_WIDTH = 1200
 INITIAL_HEIGHT = 900
 dyn_cols = 0  # calculado dinamicamente
 dyn_rows = 0  # calculado dinamicamente
-UI_PANEL_HEIGHT = 160  # altura reservada para painel de ajuda (aumentado)
+UI_PANEL_HEIGHT = 230  # altura reservada para painel de ajuda (ajustado para novas linhas)
 UI_TITLE_SIZE = 20
 UI_ENTRY_SIZE = 14
 fit_to_area = True  # escala grade para preencher área disponível
@@ -55,6 +55,29 @@ INNER_STEP = 0.05
 debug_edges = False
 show_empty_hex = True  # controla exibição dos hex vazios (brancos)
 hide_inner_when_empty = True  # oculta cubo interno em células sem bordas
+BASE_EDGE_PALETTE: list[str] | None = None  # paleta original das barras
+EDGE_PALETTES: list[list[str]] = []
+INNER_PALETTES: list[list[str]] = [
+    ["#222222", "#555555", "#999999"],
+    ["#2b2d42", "#8d99ae", "#edf2f4"],
+    ["#264653", "#2a9d8f", "#e9c46a"],
+]
+current_edge_palette_index = 0
+current_inner_palette_index = 0
+
+
+def _random_palette() -> list[str]:
+    return [f"#{random.randint(0,255):02x}{random.randint(0,255):02x}{random.randint(0,255):02x}" for _ in range(3)]
+
+def randomize_edges_only():
+    if grid:
+        pal = _random_palette()
+        grid.colors = pal  # type: ignore
+
+def randomize_inner_only():
+    if grid:
+        pal = _random_palette()
+        grid.inner_colors = pal  # type: ignore
 def init_state():
     global tile_edges, dyn_cols, dyn_rows
     if dyn_cols > 0 and dyn_rows > 0:
@@ -307,9 +330,13 @@ def draw_help_panel():
         ("R", "Reset grade"),
         ("C", "Copiar padrão célula"),
         ("+  /  -", f"Inner {inner_val}"),
-        ("1 2 3", "Paletas fixas"),
-        ("0", "Paleta base"),
-        ("X", "Paleta aleatória"),
+    ("1 2 3", "Paletas ambos"),
+    ("0", "Reset ambos"),
+    ("X", "Aleatória ambos"),
+    ("B", "Ciclar barras"),
+    ("U", "Ciclar cubo"),
+    ("P", "Aleatória barras"),
+    ("O", "Aleatória cubo"),
         ("G", f"Debug {debug_line}"),
         ("V", "Mostrar/ocultar vazios"),
         ("I", f"Inner vazios {'OFF' if hide_inner_when_empty else 'ON'}"),
@@ -379,10 +406,24 @@ def setup():
     global grid
     py5.frame_rate(60)
     init_state()
+    global BASE_EDGE_PALETTE
+    if BASE_EDGE_PALETTE is None and grid is not None:
+        BASE_EDGE_PALETTE = list(grid.colors)
     ensure_layout()
     grid = HexGrid(
         cols=dyn_cols, rows=dyn_rows, size=HEX_SIZE, draw_vertex=draw_vertex, draw_map=draw_map
     )
+    # Inicializa paletas se vazio
+    global EDGE_PALETTES, current_edge_palette_index, current_inner_palette_index
+    if not EDGE_PALETTES:
+        EDGE_PALETTES = [
+            list(grid.colors),
+            ["#666666", "#999999", "#333333"],
+            ["#1b263b", "#415a77", "#0d1b2a"],
+            ["#2f4858", "#86bbd8", "#1b3a4b"],
+        ]
+    current_edge_palette_index = 0
+    current_inner_palette_index = 0
     # Título da janela (ignora caso não suportado nesta versão do py5)
     try:
         # Algumas versões expõem 'surface', outras requerem py5.get_surface()
@@ -555,18 +596,37 @@ def key_pressed():
         grid.inner_scale = max(INNER_MIN, grid.inner_scale - INNER_STEP)
     elif py5.key == '1' and grid:
         grid.inner_colors = ["#222222", "#555555", "#999999"]
+        grid.colors = ["#666666", "#999999", "#333333"]
     elif py5.key == '2' and grid:
         grid.inner_colors = ["#2b2d42", "#8d99ae", "#edf2f4"]
+        grid.colors = ["#1b263b", "#415a77", "#0d1b2a"]
     elif py5.key == '3' and grid:
         grid.inner_colors = ["#264653", "#2a9d8f", "#e9c46a"]
+        grid.colors = ["#2f4858", "#86bbd8", "#1b3a4b"]
     elif py5.key == '0' and grid:
-        # restaura exatamente a paleta base original usada na criação
+        if BASE_EDGE_PALETTE:
+            grid.colors = list(BASE_EDGE_PALETTE)
         grid.inner_colors = list(grid.colors)
     elif py5.key in ('x', 'X') and grid:
-        # gera três tons aleatórios coerentes
         def rand_color():
             return f"#{random.randint(0,255):02x}{random.randint(0,255):02x}{random.randint(0,255):02x}"
-        grid.inner_colors = [rand_color() for _ in range(3)]
+        pal = [rand_color() for _ in range(3)]
+        grid.inner_colors = list(pal)
+        grid.colors = list(pal)
+    elif py5.key in ('b','B') and grid:
+        global current_edge_palette_index
+        if EDGE_PALETTES:
+            current_edge_palette_index = (current_edge_palette_index + 1) % len(EDGE_PALETTES)
+            grid.colors = list(EDGE_PALETTES[current_edge_palette_index])
+    elif py5.key in ('u','U') and grid:
+        global current_inner_palette_index
+        if INNER_PALETTES:
+            current_inner_palette_index = (current_inner_palette_index + 1) % len(INNER_PALETTES)
+            grid.inner_colors = list(INNER_PALETTES[current_inner_palette_index])
+    elif py5.key in ('p','P') and grid:
+        randomize_edges_only()
+    elif py5.key in ('o','O') and grid:
+        randomize_inner_only()
     elif py5.key in ('g', 'G'):
         global debug_edges
         debug_edges = not debug_edges
