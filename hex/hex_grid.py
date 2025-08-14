@@ -18,16 +18,20 @@ class HexGrid:
     offset: float = field(init=False)
     state: List[List[int]] = field(default_factory=list)
     state_colors: List[List[str]] = field(default_factory=list)
+    inner_scale: float = 0.29  # fator do hex pequeno central ("cubo") relativo a self.size
+    inner_colors: List[str] | None = None  # paleta específica do hex interno (3 cores)
 
     def __post_init__(self):
-        self.hex_height = (
-            math.sin(math.pi * 2 / 6) * self.size * 2
-        )  # Altura do hexágono
-        self.hex_width = self.size * 1.5  # Largura do hexágono
+        # Dimensões base do hex
+        self.hex_height = math.sin(math.pi * 2 / 6) * self.size * 2
+        self.hex_width = self.size * 1.5
         self.offset = self.size
-
+        # Estados
         self.state = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
         self.state_colors = [["" for _ in range(self.cols)] for _ in range(self.rows)]
+        if self.inner_colors is None:
+            # Usa cópia para permitir alterar sem afetar self.colors
+            self.inner_colors = list(self.colors)
 
     def set_state(self, evolution_history, step):
         self.state = evolution_history[step]
@@ -74,7 +78,8 @@ class HexGrid:
         else:
             return -1, -1
 
-    def draw(self):
+    def draw_base(self):
+        """Desenha apenas o hex externo para toda a grade."""
         for y in range(self.rows):
             for x in range(self.cols):
                 center_x, center_y = self.calculate_center(x, y)
@@ -87,14 +92,28 @@ class HexGrid:
                     self.draw_hexagon(center_x, center_y, self.size, color=color)
                 else:
                     self.draw_hexagon(center_x, center_y, self.size)
-                    # Desenhar um hexágono menor no centro
-                    self.draw_hexagon(
-                        center_x,
-                        center_y,
-                        self.size * 0.29,
-                        math.pi * 2 / 12,
-                        self.colors,
-                    )
+
+    def draw_inner(self):
+        """Desenha apenas o hex interno (cubo estilizado) por célula vazia."""
+        for y in range(self.rows):
+            for x in range(self.cols):
+                if self.state[y][x] == 1:
+                    continue
+                center_x, center_y = self.calculate_center(x, y)
+                inner = max(0.02, min(0.95, self.inner_scale))
+                palette = self.inner_colors if self.inner_colors else self.colors
+                self.draw_hexagon(
+                    center_x,
+                    center_y,
+                    self.size * inner,
+                    math.pi * 2 / 12,
+                    palette,
+                )
+
+    def draw(self):
+        """Mantém compatibilidade chamando base + inner."""
+        self.draw_base()
+        self.draw_inner()
 
     def draw_cell(self, cell):
         """
@@ -146,34 +165,42 @@ class HexGrid:
 
         return (f"{cell.col},{cell.row}", center_x, center_y)
 
-    def draw_parallel_shapes(self, x, y, x1, y1, colors, angle=30, factor=-1):
-        # Calcular o vetor perpendicular
+    def draw_parallel_shapes(self, x, y, x1, y1, colors, angle=30, factor=-1, start_offset: float = 0.0):
+        # Vetor principal
         dx = x1 - x
         dy = y1 - y
-        length = (dx**2 + dy**2) ** 0.5
+        length = (dx * dx + dy * dy) ** 0.5
+        if length <= 1e-9:
+            return
+        # Ajusta offset se solicitado (não deixa exceder 80% do comprimento para manter forma)
+        if start_offset > 0:
+            if start_offset >= length * 0.95:  # evita degenerar
+                start_offset = length * 0.95
+            ux, uy = dx / length, dy / length
+            x += ux * start_offset
+            y += uy * start_offset
+            dx = x1 - x
+            dy = y1 - y
+            length = (dx * dx + dy * dy) ** 0.5
+            if length <= 1e-9:
+                return
+        # Perpendicular para espessura visual
         perp_x = -dy / length * self.size / 4
         perp_y = dx / length * self.size / 4
-
-        # Calcular as novas posições para as linhas paralelas
+        # Pontos deslocados
         x2, y2 = x + perp_x, y + perp_y
         x3, y3 = x1 + perp_x, y1 + perp_y
         x4, y4 = x - perp_x, y - perp_y
         x5, y5 = x1 - perp_x, y1 - perp_y
-
+        # Interseções rotacionadas para formar polígonos
         xi, yi = line_intersection(
             x, y, *get_rotation_in_line(x, y, x2, y2, angle * factor), x3, y3, x2, y2
         )
-
-        # Desenhar a linha principal
         vertex_initial = [(x, y), (x1, y1), (x3, y3), (xi, yi)]
-
         self.draw_vertex(vertex_initial, colors[0])
-
         xin, yin = line_intersection(
             x, y, *get_rotation_in_line(x, y, x4, y4, -angle * factor), x5, y5, x4, y4
         )
-
-        # Desenhar a forma paralela
         vertex_parallel = [(x, y), (x1, y1), (x5, y5), (xin, yin)]
         self.draw_vertex(vertex_parallel, colors[1])
 
@@ -188,16 +215,19 @@ class HexGrid:
 
         # Desenhar os losângulos
         if colors and len(colors) >= 3:
+            # Restaura lógica original: iterar base_i em [-2,0,2] => (4,0,2) e usar colors[i]
+            # Para lista de 3, colors[-2] == colors[1]. Portanto ordem aplicada: colors[1], colors[0], colors[2]
             for i in [-2, 0, 2]:
-                self.draw_vertex(
-                    [
-                        (x, y),
-                        (vertices[i - 1][0], vertices[i - 1][1]),
-                        (vertices[i][0], vertices[i][1]),
-                        (vertices[i + 1][0], vertices[i + 1][1]),
-                    ],
-                    colors[i],
-                )
+                base_i = i % 6
+                prev_i = (base_i - 1) % 6
+                next_i = (base_i + 1) % 6
+                color_hex = colors[i]
+                self.draw_vertex([
+                    (x, y),
+                    (vertices[prev_i][0], vertices[prev_i][1]),
+                    (vertices[base_i][0], vertices[base_i][1]),
+                    (vertices[next_i][0], vertices[next_i][1]),
+                ], color_hex)
         else:
             self.draw_map(vertices, color)
 

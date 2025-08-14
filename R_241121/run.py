@@ -29,6 +29,14 @@ face = None
 sphere_pos = matriz[0].copy() * 20
 sphere_visible = True
 
+# ---- Controle de zoom do cubo (apenas escala global, linhas preservam espessura visual) ---- #
+cube_zoom = 1.0
+CUBE_ZOOM_STEP = 0.1
+CUBE_ZOOM_MIN = 0.3
+CUBE_ZOOM_MAX = 3.0
+BASE_EDGE_STROKE = 1.0  # espessura desejada em "pixels"
+BASE_PATH_STROKE = 3.0
+
 
 def settings():
     """
@@ -58,7 +66,8 @@ def draw():
     center_y = base / 2
     center_z = base / 2
 
-    scale_factor = min(py5.width, py5.height) / (base * 40)
+    # Aplica zoom multiplicando o fator global
+    scale_factor = (min(py5.width, py5.height) / (base * 40)) * cube_zoom
 
     vinte = base * scale_factor
     py5.translate(py5.width / 2, py5.height / 2, 0)
@@ -84,6 +93,7 @@ def draw():
     
     # Desenhar as arestas do cubo
     py5.stroke(0)
+    py5.stroke_weight(BASE_EDGE_STROKE / cube_zoom)  # compensa o zoom para manter espessura
     py5.no_fill()
     for aresta in cube_edges:
         py5.line(
@@ -97,7 +107,7 @@ def draw():
 
     # Desenha matriz com linha neon
     py5.stroke(0, 255, 0)  # Verde neon
-    py5.stroke_weight(3)  # Aumentar a espessura da linha
+    py5.stroke_weight(BASE_PATH_STROKE / cube_zoom)  # mantém espessura visual
     py5.no_fill()
     for i in range(len(matriz) - 1):
         py5.line(
@@ -157,31 +167,32 @@ def draw_face(p1, p2, p3, p4):
 
 
 def key_pressed():
-    global rotate_x_angle, rotate_y_angle, rotate_speed, seed, frames_dir
-    if py5.key == 'z' or py5.key == 'Z':
-        create_gif(frames_dir, seed)
-    elif py5.key == "w" or py5.key == 'W':
+    global rotate_x_angle, rotate_y_angle, rotate_speed, seed, frames_dir, cube_zoom
+    k = py5.key
+    # Geração de GIF: Z normal, SHIFT+Z loop infinito
+    if k in ('z', 'Z'):
+        infinite = py5.is_key_pressed and py5.key_code == py5.SHIFT
+        create_gif(frames_dir, seed, infinite_loop=infinite)
+    elif k in ('w', 'W'):
         rotate_x_angle -= rotate_speed
-    elif py5.key == "s" or py5.key == 'S':
+    elif k in ('s', 'S'):
         rotate_x_angle += rotate_speed
-    elif py5.key == "a" or py5.key == 'A':
+    elif k in ('a', 'A'):
         rotate_y_angle -= rotate_speed
-    elif py5.key == "d" or py5.key == 'D':
+    elif k in ('d', 'D'):
         rotate_y_angle += rotate_speed
-        
+    elif k in ('+', '='):
+        cube_zoom = min(CUBE_ZOOM_MAX, cube_zoom + CUBE_ZOOM_STEP)
+    elif k in ('-', '_'):
+        cube_zoom = max(CUBE_ZOOM_MIN, cube_zoom - CUBE_ZOOM_STEP)
     py5.redraw()
-    
+
 
 def mouse_dragged():
     global rotate_x_angle, rotate_y_angle
     rotate_x_angle += py5.mouse_y - py5.pmouse_y
     rotate_y_angle += py5.mouse_x - py5.pmouse_x
     py5.redraw()
-
-def key_pressed():
-    global seed, frames_dir
-    if py5.key == 'z' or py5.key == 'Z':
-        create_gif(frames_dir, seed, infinite_loop=True)
 
 
 frames_dir = save_frames(seed, limit=333, start=0)
